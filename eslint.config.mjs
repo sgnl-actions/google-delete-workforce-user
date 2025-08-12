@@ -12,7 +12,9 @@ export default [
         process: 'readonly',
         Buffer: 'readonly',
         fetch: 'readonly',
-        setTimeout: 'readonly'
+        setTimeout: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly'
       }
     },
     rules: {

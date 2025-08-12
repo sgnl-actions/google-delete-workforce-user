@@ -1,7 +1,7 @@
 {
-  "name": "@sgnl/job-template",
+  "name": "@sgnl/google-delete-workforce-user",
   "version": "1.0.0",
-  "description": "Template for SGNL JavaScript jobs",
+  "description": "Delete a workforce user from Google Cloud IAM Workforce Identity",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "validate": "node scripts/validate-metadata.js",
     "dev": "node scripts/dev-runner.js"
   },
-  "keywords": ["sgnl", "job", "template", "identity", "security"],
+  "keywords": ["sgnl", "google", "workforce", "identity", "iam", "delete", "user"],
   "author": "SGNL Engineering",
   "license": "MIT",
   "dependencies": {

@@ -1,48 +1,52 @@
-name: job-template
-description: Template for SGNL JavaScript jobs - replace with your job description
+name: google-delete-workforce-user
+description: Delete a workforce user from Google Cloud IAM Workforce Identity
 
 # Input parameters for web form generation
 inputs:
-  target:
+  workforce_pool_id:
     type: text
-    description: Target resource identifier (e.g., user email, group ID)
+    description: The ID of the workforce pool containing the user
     required: true
     validation:
       min: 1
       max: 100
 
-  action:
+  subject_id:
     type: text
-    description: Action to perform on the target resource
+    description: The subject ID of the workforce user to delete
     required: true
     validation:
       min: 1
-      max: 50
+      max: 200
 
-  options:
-    type: array
-    description: Additional options for the operation
+  project_id:
+    type: text
+    description: Google Cloud project ID (if not specified, will be inferred from credentials)
     required: false
-    item_type: text
     validation:
-      max: 10
-
-  dry_run:
-    type: boolean
-    description: Preview changes without executing them
-    required: false
-    default: false
+      min: 1
+      max: 100
 
 # Expected output structure
 outputs:
   status:
     type: text
-    description: Operation result (success, failed, recovered, etc.)
+    description: Operation result (success, failed, recovered, halted)
 
-  target:
+  workforce_pool_id:
     type: text
-    description: The target resource that was processed
+    description: The workforce pool ID that was processed
 
-  processed_at:
+  subject_id:
+    type: text
+    description: The subject ID that was deleted
+
+  deleted_at:
     type: datetime
-    description: When the operation completed (ISO 8601)
+    description: When the deletion completed (ISO 8601)
+
+# Secret credentials required
+secrets:
+  service_account_key:
+    description: Google Cloud service account key JSON (base64 encoded)
+    required: true
