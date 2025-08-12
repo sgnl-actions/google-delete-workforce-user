@@ -3,7 +3,7 @@ description: Delete a workforce user from Google Cloud IAM Workforce Identity
 
 # Input parameters for web form generation
 inputs:
-  workforce_pool_id:
+  workforcePoolId:
     type: text
     description: The ID of the workforce pool containing the user
     required: true
@@ -11,7 +11,7 @@ inputs:
       min: 1
       max: 100
 
-  subject_id:
+  subjectId:
     type: text
     description: The subject ID of the workforce user to delete
     required: true
@@ -19,34 +19,34 @@ inputs:
       min: 1
       max: 200
 
-  project_id:
-    type: text
-    description: Google Cloud project ID (if not specified, will be inferred from credentials)
-    required: false
-    validation:
-      min: 1
-      max: 100
-
 # Expected output structure
 outputs:
-  status:
-    type: text
-    description: Operation result (success, failed, recovered, halted)
-
-  workforce_pool_id:
+  workforcePoolId:
     type: text
     description: The workforce pool ID that was processed
 
-  subject_id:
+  subjectId:
     type: text
     description: The subject ID that was deleted
 
-  deleted_at:
+  deleted:
+    type: boolean
+    description: Whether the user was successfully deleted
+
+  alreadyDeleted:
+    type: boolean
+    description: Whether the user was already deleted (404 response)
+
+  deletedAt:
     type: datetime
     description: When the deletion completed (ISO 8601)
 
-# Secret credentials required
+# Required secrets (configured at deployment time)
 secrets:
-  service_account_key:
-    description: Google Cloud service account key JSON (base64 encoded)
-    required: true
+  - GOOGLE_SERVICE_ACCOUNT_KEY
+
+# Runtime configuration
+runtime:
+  type: nodejs-22
+  timeout: 30s
+  memory: 128Mi
