@@ -14,12 +14,12 @@ import { JWT } from 'google-auth-library';
 async function deleteWorkforceUser(workforcePoolId, subjectId, serviceAccountKey) {
   // Parse the service account key
   const keyData = JSON.parse(serviceAccountKey);
-  
+
   // Create a JWT client with the service account credentials
   const authClient = new JWT({
     email: keyData.client_email,
     key: keyData.private_key,
-    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+    scopes: ['https://www.googleapis.com/auth/cloud-platform']
   });
 
   // Construct the API URL
@@ -29,9 +29,9 @@ async function deleteWorkforceUser(workforcePoolId, subjectId, serviceAccountKey
     // Make the DELETE request using the auth client
     const response = await authClient.request({
       url,
-      method: 'DELETE',
+      method: 'DELETE'
     });
-    
+
     return {
       success: true,
       status: response.status,
@@ -84,7 +84,7 @@ export default {
     // Handle the response
     if (result.success) {
       console.log(`Successfully deleted workforce user ${subjectId}`);
-      
+
       return {
         subjectId: subjectId,
         workforcePoolId: workforcePoolId,
@@ -95,7 +95,7 @@ export default {
 
     // Handle specific error cases
     const statusCode = result.status;
-    
+
     // 404 means user doesn't exist - consider this success (idempotent)
     if (statusCode === 404) {
       console.log(`Workforce user ${subjectId} not found - already deleted`);
@@ -115,9 +115,9 @@ export default {
     } else if (typeof result.error === 'string') {
       errorMessage = `Failed to delete workforce user: ${result.error}`;
     }
-    
+
     console.error('Google API error:', result.error);
-    
+
     const error = new Error(errorMessage);
     error.statusCode = statusCode;
     throw error;
