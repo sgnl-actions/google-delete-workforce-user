@@ -5,46 +5,35 @@
  * the Google Cloud IAM API.
  */
 
-import { JWT } from 'google-auth-library';
-
 /**
  * Helper function to delete a workforce user
  * @private
  */
-async function deleteWorkforceUser(workforcePoolId, subjectId, serviceAccountKey) {
-  // Parse the service account key
-  const keyData = JSON.parse(serviceAccountKey);
-
-  // Create a JWT client with the service account credentials
-  const authClient = new JWT({
-    email: keyData.client_email,
-    key: keyData.private_key,
-    scopes: ['https://www.googleapis.com/auth/cloud-platform']
-  });
-
+async function deleteWorkforceUser(workforcePoolId, subjectId) {
   // Construct the API URL
   const url = `https://iam.googleapis.com/v1/locations/global/workforcePools/${workforcePoolId}/subjects/${subjectId}`;
 
-  try {
-    // Make the DELETE request using the auth client
-    const response = await authClient.request({
-      url,
-      method: 'DELETE'
-    });
+  // Make the DELETE request - authentication is handled externally
+  const response = await fetch(url, {
+    method: 'DELETE'
+  });
 
-    return {
-      success: true,
-      status: response.status,
-      data: response.data
-    };
-  } catch (error) {
-    // Return error details for proper handling
-    return {
-      success: false,
-      status: error.response?.status || error.code,
-      error: error.response?.data || error.message
-    };
+  // Read response body if available
+  let responseData = null;
+  try {
+    const text = await response.text();
+    if (text) {
+      responseData = JSON.parse(text);
+    }
+  } catch {
+    // Response might not be JSON or empty
   }
+
+  return {
+    success: response.ok,
+    status: response.status,
+    data: responseData
+  };
 }
 
 export default {
@@ -53,7 +42,37 @@ export default {
    * @param {Object} params - Job input parameters
    * @param {string} params.workforcePoolId - The workforce pool ID
    * @param {string} params.subjectId - The subject/user ID to delete
-   * @param {Object} context - Execution context with env, secrets, outputs
+   *
+   * @param {Object} context - Execution context with secrets and environment
+   *
+   * The configured auth type will determine which of the following environment variables and secrets are available
+   * @param {string} context.secrets.BEARER_AUTH_TOKEN
+   *
+   * @param {string} context.secrets.BASIC_USERNAME
+   * @param {string} context.secrets.BASIC_PASSWORD
+   *
+   * @param {string} context.secrets.OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_AUDIENCE
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_AUTH_STYLE
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_SCOPE
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL
+   *
+   * @param {string} context.secrets.OAUTH2_AUTHORIZATION_CODE_ACCESS_TOKEN
+   * @param {string} context.secrets.OAUTH2_AUTHORIZATION_CODE_AUTHORIZATION_CODE
+   * @param {string} context.secrets.OAUTH2_AUTHORIZATION_CODE_CLIENT_SECRET
+   * @param {string} context.secrets.OAUTH2_AUTHORIZATION_CODE_REFRESH_TOKEN
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_AUTH_STYLE
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_AUTH_URL
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_CLIENT_ID
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_LAST_TOKEN_ROTATION_TIMESTAMP
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_REDIRECT_URI
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_SCOPE
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_TOKEN_LIFETIME_FREQUENCY
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_TOKEN_ROTATION_FREQUENCY
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_TOKEN_ROTATION_INTERVAL
+   * @param {string} context.environment.OAUTH2_AUTHORIZATION_CODE_TOKEN_URL
+   *
    * @returns {Object} Job results
    */
   invoke: async (params, context) => {
@@ -69,16 +88,11 @@ export default {
       throw new Error('Invalid or missing subjectId parameter');
     }
 
-    // Validate service account key is present
-    if (!context.secrets?.GOOGLE_SERVICE_ACCOUNT_KEY) {
-      throw new Error('Missing required secret: GOOGLE_SERVICE_ACCOUNT_KEY');
-    }
-
     // Make the API request to delete the user
+    // Authentication is handled by the external system
     const result = await deleteWorkforceUser(
       workforcePoolId,
-      subjectId,
-      context.secrets.GOOGLE_SERVICE_ACCOUNT_KEY
+      subjectId
     );
 
     // Handle the response
