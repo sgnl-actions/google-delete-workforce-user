@@ -70,9 +70,6 @@ The configured auth type will determine which secrets are needed:
     "subjectId": "user@example.com",
     "workforcePoolId": "my-workforce-pool",
     "address": "https://iam.googleapis.com"
-  },
-  "environment": {
-    "LOG_LEVEL": "info"
   }
 }
 ```
