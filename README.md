@@ -222,15 +222,6 @@ This action uses the following Google Cloud IAM API endpoint:
    - Ensure your credentials have the `iam.workforcePoolSubjects.delete` permission
    - Verify the service account has access to the workforce pool
 
-## Version History
-
-### v1.0.0
-- Initial release
-- Support for workforce user deletion via Google Cloud IAM API
-- Multiple authentication methods (Bearer, Basic, OAuth2 Client Credentials, OAuth2 Authorization Code)
-- Integration with @sgnl-actions/utils package
-- Idempotent operation support
-
 ## License
 
 MIT
