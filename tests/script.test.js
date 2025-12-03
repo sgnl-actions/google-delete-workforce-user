@@ -3,7 +3,7 @@ import script from '../src/script.mjs';
 describe('Google Delete Workforce User Script', () => {
   const mockContext = {
     environment: {
-      ENVIRONMENT: 'test'
+      ADDRESS: 'https://iam.googleapis.com'
     },
     secrets: {
       OAUTH2_AUTHORIZATION_CODE_ACCESS_TOKEN: 'test-google-access-token'
