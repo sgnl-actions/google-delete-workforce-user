@@ -5,55 +5,68 @@
  * the Google Cloud IAM API.
  */
 
-import { JWT } from 'google-auth-library';
+import { getAuthorizationHeader, getBaseUrl } from '@sgnl-actions/utils';
 
 /**
  * Helper function to delete a workforce user
  * @private
  */
-async function deleteWorkforceUser(workforcePoolId, subjectId, serviceAccountKey) {
-  // Parse the service account key
-  const keyData = JSON.parse(serviceAccountKey);
+async function deleteWorkforceUser(workforcePoolId, subjectId, baseUrl, authHeader) {
+  // Construct the API URL
+  const url = `${baseUrl}/v1/locations/global/workforcePools/${workforcePoolId}/subjects/${subjectId}`;
 
-  // Create a JWT client with the service account credentials
-  const authClient = new JWT({
-    email: keyData.client_email,
-    key: keyData.private_key,
-    scopes: ['https://www.googleapis.com/auth/cloud-platform']
+  // Make the DELETE request with authentication
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': authHeader
+    }
   });
 
-  // Construct the API URL
-  const url = `https://iam.googleapis.com/v1/locations/global/workforcePools/${workforcePoolId}/subjects/${subjectId}`;
-
+  // Read response body if available
+  let responseData = null;
   try {
-    // Make the DELETE request using the auth client
-    const response = await authClient.request({
-      url,
-      method: 'DELETE'
-    });
-
-    return {
-      success: true,
-      status: response.status,
-      data: response.data
-    };
-  } catch (error) {
-    // Return error details for proper handling
-    return {
-      success: false,
-      status: error.response?.status || error.code,
-      error: error.response?.data || error.message
-    };
+    const text = await response.text();
+    if (text) {
+      responseData = JSON.parse(text);
+    }
+  } catch {
+    // Response might not be JSON or empty
   }
+
+  return {
+    success: response.ok,
+    status: response.status,
+    data: responseData
+  };
 }
 
 export default {
   /**
    * Main execution handler - deletes a workforce user
    * @param {Object} params - Job input parameters
-   * @param {string} params.workforcePoolId - The workforce pool ID
    * @param {string} params.subjectId - The subject/user ID to delete
-   * @param {Object} context - Execution context with env, secrets, outputs
+   * @param {string} params.workforcePoolId - The workforce pool ID
+   * @param {string} params.address - Full URL to Google IAM API (defaults to https://iam.googleapis.com)
+   *
+   * @param {Object} context - Execution context with secrets and environment
+   * @param {string} context.environment.ADDRESS - Default Google IAM API base URL
+   *
+   * The configured auth type will determine which of the following environment variables and secrets are available
+   * @param {string} context.secrets.BEARER_AUTH_TOKEN
+   *
+   * @param {string} context.secrets.BASIC_USERNAME
+   * @param {string} context.secrets.BASIC_PASSWORD
+   *
+   * @param {string} context.secrets.OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_AUDIENCE
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_AUTH_STYLE
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_SCOPE
+   * @param {string} context.environment.OAUTH2_CLIENT_CREDENTIALS_TOKEN_URL
+   *
+   * @param {string} context.secrets.OAUTH2_AUTHORIZATION_CODE_ACCESS_TOKEN
+   *
    * @returns {Object} Job results
    */
   invoke: async (params, context) => {
@@ -62,23 +75,31 @@ export default {
     console.log(`Starting Google Workforce user deletion for subject ${subjectId} in pool ${workforcePoolId}`);
 
     // Validate inputs
-    if (!workforcePoolId || typeof workforcePoolId !== 'string') {
-      throw new Error('Invalid or missing workforcePoolId parameter');
-    }
     if (!subjectId || typeof subjectId !== 'string') {
       throw new Error('Invalid or missing subjectId parameter');
     }
-
-    // Validate service account key is present
-    if (!context.secrets?.GOOGLE_SERVICE_ACCOUNT_KEY) {
-      throw new Error('Missing required secret: GOOGLE_SERVICE_ACCOUNT_KEY');
+    if (!workforcePoolId || typeof workforcePoolId !== 'string') {
+      throw new Error('Invalid or missing workforcePoolId parameter');
     }
+
+    // Get base URL using utils (with default for Google IAM API)
+    let baseUrl;
+    try {
+      baseUrl = getBaseUrl(params, context);
+    } catch (error) {
+      // Default to standard Google IAM API URL if not provided
+      baseUrl = 'https://iam.googleapis.com';
+    }
+
+    // Get authorization header using utils
+    const authHeader = await getAuthorizationHeader(context);
 
     // Make the API request to delete the user
     const result = await deleteWorkforceUser(
       workforcePoolId,
       subjectId,
-      context.secrets.GOOGLE_SERVICE_ACCOUNT_KEY
+      baseUrl,
+      authHeader
     );
 
     // Handle the response
@@ -125,8 +146,10 @@ export default {
 
   /**
    * Error recovery handler - framework handles retries by default
+   *
    * @param {Object} params - Original params plus error information
    * @param {Object} context - Execution context
+   *
    * @returns {Object} Recovery results
    */
   error: async (params, _context) => {
@@ -140,8 +163,10 @@ export default {
 
   /**
    * Graceful shutdown handler - cleanup when job is halted
+   *
    * @param {Object} params - Original params plus halt reason
    * @param {Object} context - Execution context
+   *
    * @returns {Object} Cleanup results
    */
   halt: async (params, _context) => {
