@@ -1,4 +1,5 @@
 import script from '../src/script.mjs';
+import { SGNL_USER_AGENT } from '@sgnl-actions/utils';
 
 describe('Google Delete Workforce User Script', () => {
   const mockContext = {
@@ -76,8 +77,10 @@ describe('Google Delete Workforce User Script', () => {
       };
 
       let capturedUrl;
+      let captuiredOptions;
       global.fetch = async (url, options) => {
         capturedUrl = url;
+        capturedOptions = options;
         return {
           ok: true,
           status: 200,
@@ -88,6 +91,7 @@ describe('Google Delete Workforce User Script', () => {
       await script.invoke(params, mockContext);
 
       expect(capturedUrl).toBe('https://iam.googleapis.com/v1/locations/global/workforcePools/pool123/subjects/user456');
+      expect(capturedOptions.headers['User-Agent']).toBe(SGNL_USER_AGENT);
     });
 
     test('should use address parameter when provided', async () => {
@@ -98,8 +102,10 @@ describe('Google Delete Workforce User Script', () => {
       };
 
       let capturedUrl;
+      let capturedOptions;
       global.fetch = async (url, options) => {
         capturedUrl = url;
+        capturedOptions = options;
         return {
           ok: true,
           status: 200,
@@ -110,6 +116,7 @@ describe('Google Delete Workforce User Script', () => {
       await script.invoke(params, mockContext);
 
       expect(capturedUrl).toBe('https://custom.googleapis.com/v1/locations/global/workforcePools/pool123/subjects/user456');
+      expect(capturedOptions.headers['User-Agent']).toBe(SGNL_USER_AGENT);
     });
 
     test('should use ADDRESS environment variable when address param not provided', async () => {
@@ -126,8 +133,10 @@ describe('Google Delete Workforce User Script', () => {
       };
 
       let capturedUrl;
+      let capturedOptions;
       global.fetch = async (url, options) => {
         capturedUrl = url;
+        capturedOptions = options;
         return {
           ok: true,
           status: 200,
@@ -138,6 +147,7 @@ describe('Google Delete Workforce User Script', () => {
       await script.invoke(params, contextWithEnvAddress);
 
       expect(capturedUrl).toBe('https://env.googleapis.com/v1/locations/global/workforcePools/pool123/subjects/user456');
+      expect(capturedOptions.headers['User-Agent']).toBe(SGNL_USER_AGENT);
     });
   });
 
