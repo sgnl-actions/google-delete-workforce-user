@@ -5,7 +5,7 @@
  * the Google Cloud IAM API.
  */
 
-import { getAuthorizationHeader, getBaseURL} from '@sgnl-actions/utils';
+import { getAuthorizationHeader, getBaseURL, SGNL_USER_AGENT} from '@sgnl-actions/utils';
 
 /**
  * Helper function to delete a workforce user
@@ -19,7 +19,8 @@ async function deleteWorkforceUser(workforcePoolId, subjectId, baseUrl, authHead
   const response = await fetch(url, {
     method: 'DELETE',
     headers: {
-      'Authorization': authHeader
+      'Authorization': authHeader,
+      'User-Agent': SGNL_USER_AGENT
     }
   });
 
