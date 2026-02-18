@@ -77,7 +77,7 @@ describe('Google Delete Workforce User Script', () => {
       };
 
       let capturedUrl;
-      let captuiredOptions;
+      let capturedOptions;
       global.fetch = async (url, options) => {
         capturedUrl = url;
         capturedOptions = options;
